@@ -5,12 +5,21 @@
   "publisher": "bridgeconn",
   "version": "0.0.1",
   "engines": {
+    "node": ">=18.17.0",
     "vscode": "^1.85.0"
   },
+  "keywords": [
+    "recorder",
+    "audio",
+    "bridgeconn",
+    "audio resource"
+  ],
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
@@ -21,10 +30,14 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "yarn run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "pretest": "yarn run compile && yarn run lint",
+    "vscode:prepublish": "yarn run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "deploy": "vsce publish --yarn",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "yarn run compile-tests && yarn run compile && yarn run lint",
     "lint": "eslint src --ext ts",
     "test": "vscode-test"
   },
@@ -38,12 +51,17 @@
     "@vscode/test-cli": "^0.0.9",
     "@vscode/test-electron": "^2.3.9",
     "eslint": "^8.57.0",
-    "typescript": "^5.4.5"
+    "prettier": "3.2.5",
+    "typescript": "^5.4.5",
+    "ts-loader": "^9.5.1",
+    "webpack": "^5.90.3",
+    "webpack-cli": "^5.1.4"
   },
   "extensionDependencies": [
     "sevenx-codex.codex-resources"
   ],
   "dependencies": {
+    "@vscode/webview-ui-toolkit": "^1.4.0",
     "moment": "^2.30.1"
   }
 }
