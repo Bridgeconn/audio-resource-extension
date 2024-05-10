@@ -3,13 +3,12 @@ import {
   CodexResource,
   ConfigResourceValues,
 } from '@codex-extensions/resource-manager-types';
-import { Audio } from './types';
+import { Audio, AudioBurrito } from './types';
 import moment from 'moment';
-import JSZip from 'jszip';
 import { getNonce, getUri } from '../../utilities';
 import { MessageType } from '../../types';
 import * as vscode from 'vscode';
-import { getVerseTranslationWordsList } from './utils';
+
 
 export class AudioResource implements CodexResource<Audio> {
   id = 'codex.audio';
@@ -102,39 +101,43 @@ export class AudioResource implements CodexResource<Audio> {
       },
       onWebviewVisible: async (webviewPanel) => {
         helpers.stateStore.storeListener('verseRef', async (verseRefStore) => {
-          console.log('Opening TWL resource on verseRef change');
-          const wordsList = await getVerseTranslationWordsList(
-            resource,
-            verseRefStore?.verseRef ?? 'GEN 1:1',
-          );
-          webviewPanel.webview.postMessage({
-            type: 'update-twl',
-            payload: {
-              wordsList: wordsList,
-            },
-          });
+          console.log('verseRef change event triggered from storeListener ===');
+          /**
+           * Here need to handle post data to UI when verse / chapter change
+           */
+          // webviewPanel.webview.postMessage({
+          //   type: 'update-twl',
+          //   payload: {
+          //     wordsList: wordsList,
+          //   },
+          // });
         });
-        const verseRefStore = await helpers.stateStore?.getStoreState(
+        const verseRefStore = (await helpers.stateStore?.getStoreState(
           'verseRef',
-        );
-        console.log('Opening TWL resource', verseRefStore?.verseRef);
-        const wordsList = await getVerseTranslationWordsList(
-          resource,
-          verseRefStore?.verseRef ?? 'GEN 1:1',
+        )) as { verseRef: any };
+        console.log(
+          'current verse selction ========> ',
+          verseRefStore?.verseRef,
         );
 
-        console.log('TWL wordsList', wordsList);
+        // webviewPanel.webview.postMessage({
 
-        webviewPanel.webview.postMessage({
-          type: 'update-twl',
-          payload: {
-            wordsList: wordsList,
-          },
-        });
+
+        //   type: 'update-twl',
+        //   payload: {
+        //     wordsList: wordsList,
+        //   },
+        // });
       },
     });
   };
 
+  /**
+   * This func is for return structured data to display online resource to list out and download
+   * @returns
+   */
+  //TODO : Typescript fix needed here -> ignored
+  // @ts-ignore
   getTableDisplayData = async () => {
     // Read config
     // const resourceUrl = `https://git.door43.org/api/v1/catalog/search?subject=TSV Translation Words Links&metadataType=rc`;
@@ -180,7 +183,7 @@ export class AudioResource implements CodexResource<Audio> {
     // return [];
   };
 
-  getOfflineImportMetadata: CodexResource<Twl>['getOfflineImportMetadata'] =
+  getOfflineImportMetadata: CodexResource<Audio>['getOfflineImportMetadata'] =
     async (params) => {
       const { fs, resourceUri } = params;
 
@@ -188,7 +191,7 @@ export class AudioResource implements CodexResource<Audio> {
 
       const metadataFile = await fs.readFile(metadataUri);
       const metadataJson = JSON.parse(metadataFile.toString());
-      const metadata = metadataJson as Twl;
+      const metadata = metadataJson as AudioBurrito;
       const primaryKey = Object.keys(metadata.identification.primary);
       const primaryId = Object.keys(
         metadata.identification.primary[primaryKey[0]],
@@ -202,7 +205,7 @@ export class AudioResource implements CodexResource<Audio> {
         version: revision,
       };
     };
-  getOfflineConfigResourceValues: CodexResource<Twl>['getOfflineConfigResourceValues'] =
+  getOfflineConfigResourceValues: CodexResource<Audio>['getOfflineConfigResourceValues'] =
     async (params) => {
       const { fs, resourceUri } = params;
 
@@ -210,7 +213,7 @@ export class AudioResource implements CodexResource<Audio> {
 
       const metadataFile = await fs.readFile(metadataUri);
       const metadataJson = JSON.parse(metadataFile.toString());
-      const metadata = metadataJson as Twl;
+      const metadata = metadataJson as AudioBurrito;
 
       const localPath: string = resourceUri.fsPath;
       const primaryKey = Object.keys(metadata.identification.primary);
@@ -226,13 +229,14 @@ export class AudioResource implements CodexResource<Audio> {
         type: this.id,
         remoteUrl: '',
         version: revision,
+        // TODO : Ts ignored here => this language will be added in the npm types package later
+        // @ts-ignore
         language: metadata.languages[0].tag,
       };
 
       return downloadedResource;
     };
 }
-
 
 const handleResourceWebviewMessages = async (
   e: {
