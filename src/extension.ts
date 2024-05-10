@@ -35,7 +35,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const api = await extension.activate();
     if (api) {
       console.log('Api found', api);
-      api.registerResource(new AudioResource());
+      api.registerResource(new AudioResource(context));
     } else {
       console.log('API failed successfully!!!!!');
     }
