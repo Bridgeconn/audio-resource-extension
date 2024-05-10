@@ -93,7 +93,6 @@ export class AudioResource implements CodexResource<Audio> {
           <title>Translation Words Webview</title>
         </head>
         <body>
-          <h1>Hello Testing now</h1>
           <div id="root"></div>
           <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
         </body>
