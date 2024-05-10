@@ -3,20 +3,33 @@ import {
   CodexResource,
   ConfigResourceValues,
 } from '@codex-extensions/resource-manager-types';
-import { Twl, TwlApiResponse } from './types';
+import { Audio } from './types';
 import moment from 'moment';
 import JSZip from 'jszip';
 import { getNonce, getUri } from '../../utilities';
 import { MessageType } from '../../types';
 import * as vscode from 'vscode';
 import { getVerseTranslationWordsList } from './utils';
-export class AudioResource implements CodexResource<Twl> {
+
+export class AudioResource implements CodexResource<Audio> {
   id = 'codex.audio';
   displayLabel = 'Audio Resource';
 
   constructor(private readonly context: vscode.ExtensionContext) {}
-  downloadResource: CodexResource<Twl>['downloadResource'] = async () => {
-    return Promise.resolve();
+  downloadResource: CodexResource<Audio>['downloadResource'] = async (
+    fullResource,
+    utils,
+  ) => {
+    // this is to avoid tsError of function not return ConfigResourceValues
+    const configresourceValues = {
+      name: '',
+      id: '',
+      localPath: '',
+      remoteUrl: '',
+      version: '',
+      type: '',
+    };
+    return Promise.resolve(configresourceValues);
   };
 
   getResources = async () => {
@@ -31,7 +44,7 @@ export class AudioResource implements CodexResource<Twl> {
     return Promise.resolve();
   };
 
-  openResource: CodexResource<Twl>['openResource'] = async (
+  openResource: CodexResource<Audio>['openResource'] = async (
     resource,
     helpers,
   ) => {
@@ -180,7 +193,8 @@ export class AudioResource implements CodexResource<Twl> {
       const primaryId = Object.keys(
         metadata.identification.primary[primaryKey[0]],
       );
-      const revision = metadata.identification.primary[primaryKey[0]][primaryId[0]].revision;
+      const revision =
+        metadata.identification.primary[primaryKey[0]][primaryId[0]].revision;
       return {
         ...metadata,
         name: metadata?.identification?.name.en,
@@ -203,7 +217,8 @@ export class AudioResource implements CodexResource<Twl> {
       const primaryId = Object.keys(
         metadata.identification.primary[primaryKey[0]],
       );
-      const revision = metadata.identification.primary[primaryKey[0]][primaryId[0]].revision;
+      const revision =
+        metadata.identification.primary[primaryKey[0]][primaryId[0]].revision;
       const downloadedResource: ConfigResourceValues = {
         name: metadata?.identification?.name.en,
         id: String(primaryId[0]),
@@ -217,6 +232,8 @@ export class AudioResource implements CodexResource<Twl> {
       return downloadedResource;
     };
 }
+
+
 const handleResourceWebviewMessages = async (
   e: {
     type: MessageType;
