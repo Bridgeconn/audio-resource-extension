@@ -26,6 +26,11 @@
       {
         "command": "scribe-audio-resource.helloWorld",
         "title": "Hello World"
+      },
+      {
+        "command": "scribe-audio-resource.openAudioReferencePane",
+        "title": "Open Scribe Audio Reference Pane",
+        "category": "ScribeAudio"
       }
     ]
   },

@@ -9,7 +9,6 @@ import { getNonce, getUri } from '../../utilities';
 import { MessageType } from '../../types';
 import * as vscode from 'vscode';
 
-
 export class AudioResource implements CodexResource<Audio> {
   id = 'codex.audio';
   displayLabel = 'Audio Resource';
@@ -54,49 +53,7 @@ export class AudioResource implements CodexResource<Audio> {
         );
       },
       getWebviewContent: (webview, extensionUri) => {
-        // The CSS file from the React build output
-        const stylesUri = getUri(webview, this.context.extensionUri, [
-          'src',
-          'webview-dist',
-          'AudioReferenceView',
-          'index.css',
-        ]);
-        console.log('script1', { webview }, this.context.extensionUri);
-
-        // The View JS file from the React build output
-        const scriptUri = getUri(webview, this.context.extensionUri, [
-          'src',
-          'webview-dist',
-          'AudioReferenceView',
-          'index.js',
-        ]);
-        console.log('script', scriptUri);
-        const codiconsUri = getUri(webview, this.context.extensionUri, [
-          'node_modules',
-          '@vscode/codicons',
-          'dist',
-          'codicon.css',
-        ]);
-
-        const nonce = getNonce();
-
-        // Tip: Install the es6-string-html VS Code extension to enable code highlighting below
-        return /*html*/ `
-      <!DOCTYPE html>
-      <html lang="en">
-        <head>
-          <meta charset="UTF-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';"> -->
-          <link rel="stylesheet" type="text/css" href="${stylesUri}">
-            <link rel="stylesheet" type="text/css" href="${codiconsUri}">
-          <title>Translation Words Webview</title>
-        </head>
-        <body>
-          <div id="root"></div>
-          <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
-        </body>
-      </html>`;
+        
       },
       onWebviewVisible: async (webviewPanel) => {
         helpers.stateStore.storeListener('verseRef', async (verseRefStore) => {
@@ -121,7 +78,6 @@ export class AudioResource implements CodexResource<Audio> {
 
         // webviewPanel.webview.postMessage({
 
-
         //   type: 'update-twl',
         //   payload: {
         //     wordsList: wordsList,
@@ -130,6 +86,112 @@ export class AudioResource implements CodexResource<Audio> {
       },
     });
   };
+
+  // openResource: CodexResource<Audio>['openResource'] = async (
+  //   resource,
+  //   helpers,
+  // ) => {
+  //   helpers.renderInWebview({
+  //     handler: (webviewPanel) => {
+  //       webviewPanel.webview.onDidReceiveMessage((e) =>
+  //         handleResourceWebviewMessages(e, webviewPanel.webview.postMessage),
+  //       );
+  //     },
+  //     getWebviewContent: (webview, extensionUri) => {
+  //       // The CSS file from the React build output
+  //       // const stylesUri = getUri(webview, this.context.extensionUri, [
+  //       //   'src',
+  //       //   'webview-dist',
+  //       //   'AudioReferenceView',
+  //       //   'index.css',
+  //       // ]);
+  //       // console.log('script1', { webview }, this.context.extensionUri);
+
+  //       // // The View JS file from the React build output
+  //       // const scriptUri = getUri(webview, this.context.extensionUri, [
+  //       //   'src',
+  //       //   'webview-dist',
+  //       //   'AudioReferenceView',
+  //       //   'index.js',
+  //       // ]);
+  //       // console.log('script', scriptUri);
+  //       // const codiconsUri = getUri(webview, this.context.extensionUri, [
+  //       //   'node_modules',
+  //       //   '@vscode/codicons',
+  //       //   'dist',
+  //       //   'codicon.css',
+  //       // ]);
+
+  //       const scriptUri = webview.asWebviewUri(
+  //         vscode.Uri.joinPath(
+  //           this.context.extensionUri,
+  //           'src',
+  //           'webview-dist',
+  //           'AudioReferenceView',
+  //           'index.js',
+  //         ),
+  //       );
+  //       const stylesUri = webview.asWebviewUri(
+  //         vscode.Uri.joinPath(
+  //           this.context.extensionUri,
+  //           'src',
+  //           'webview-dist',
+  //           'AudioReferenceView',
+  //           'index.css',
+  //         ),
+  //       );
+  //       // <!--link rel="stylesheet" type="text/css" href="${codiconsUri}"-->
+
+  //       const nonce = getNonce();
+
+  //       // Tip: Install the es6-string-html VS Code extension to enable code highlighting below
+  //       return /*html*/ `
+  //     <!DOCTYPE html>
+  //     <html lang="en">
+  //       <head>
+  //         <meta charset="UTF-8" />
+  //         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  //         <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} blob:; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';"> -->
+  //         <link rel="stylesheet" type="text/css" href="${stylesUri}">
+  //         <title>Scribe Audio Resource</title>
+  //       </head>
+  //       <body>
+  //         <div id="root"></div>
+  //         <script nonce="${nonce}" src="${scriptUri}"></script>
+  //       </body>
+  //     </html>`;
+  //     },
+  //     onWebviewVisible: async (webviewPanel) => {
+  //       helpers.stateStore.storeListener('verseRef', async (verseRefStore) => {
+  //         console.log('verseRef change event triggered from storeListener ===');
+  //         /**
+  //          * Here need to handle post data to UI when verse / chapter change
+  //          */
+  //         // webviewPanel.webview.postMessage({
+  //         //   type: 'update-twl',
+  //         //   payload: {
+  //         //     wordsList: wordsList,
+  //         //   },
+  //         // });
+  //       });
+  //       const verseRefStore = (await helpers.stateStore?.getStoreState(
+  //         'verseRef',
+  //       )) as { verseRef: any };
+  //       console.log(
+  //         'current verse selction ========> ',
+  //         verseRefStore?.verseRef,
+  //       );
+
+  //       // webviewPanel.webview.postMessage({
+
+  //       //   type: 'update-twl',
+  //       //   payload: {
+  //       //     wordsList: wordsList,
+  //       //   },
+  //       // });
+  //     },
+  //   });
+  // };
 
   /**
    * This func is for return structured data to display online resource to list out and download
