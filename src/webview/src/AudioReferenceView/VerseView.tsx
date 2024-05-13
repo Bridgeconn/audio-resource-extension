@@ -1,4 +1,5 @@
 import { IVerseData } from '../../../types/index';
+import AudioPlayer from './AudioPlayer';
 
 interface IVerseView {
   verseData: IVerseData;
@@ -26,9 +27,12 @@ function VerseView({ verseData, scriptDirection }: IVerseView) {
         `}
         >
           <div
-            className={`flex gap-2 ${scriptDirection === 'rtl' && 'flex-row-reverse text-end'}`}
+            className={`flex flex-col gap-2 ${scriptDirection === 'rtl' && 'flex-row-reverse text-end'}`}
           >
             <div className="flex-1">{verseData.verseText}</div>
+            <div className="flex-1">
+              <AudioPlayer audioURI={verseData?.audio} />
+            </div>
           </div>
         </div>
       </div>

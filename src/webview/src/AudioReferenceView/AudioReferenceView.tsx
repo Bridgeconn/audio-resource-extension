@@ -10,6 +10,11 @@ const chapterContent: IChapterdata = {
       verseText: 'Sample test text..... verse 1 of chapter 1....',
       audio: '',
     },
+    {
+      verseNumber: 2,
+      verseText: 'Sample test text..... verse 2 of chapter 1....',
+      audio: '',
+    },
   ],
 };
 function App() {
