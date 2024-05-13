@@ -1,3 +1,5 @@
+import * as vscode from 'vscode';
+
 export enum MessageType {
   showDialog = "showDialog",
   save = "save",
@@ -23,17 +25,18 @@ export enum MessageType {
   SET_CURRENT_RESOURCE_TYPE = "set-current-resource-type",
 }
 
-export type OBSRef = {
-  storyId: string;
-  paragraph: string;
-};
-
-export interface SelectedTextDataWithContext {
-  selection: string;
-  completeLineContent: string | null;
-  vrefAtStartOfLine: string | null;
-  selectedText: string | null;
+export interface IVerseData {
+  verseNumber: number;
+  verseText?: string;
+  audio: string | vscode.Uri;
 }
+
+export interface IChapterdata {
+  chapterNumber: number;
+  contents: IVerseData[];
+}
+
+
 export interface VerseRefGlobalState {
   verseRef: string;
   uri: string;

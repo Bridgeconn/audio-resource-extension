@@ -1,0 +1,1 @@
+// Types for messages shared from UI to Extension
