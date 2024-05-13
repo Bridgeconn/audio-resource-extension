@@ -14,8 +14,10 @@
   },
   "dependencies": {
     "@types/vscode-webview": "^1.57.5",
+    "@wavesurfer/react": "^1.0.6",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "wavesurfer.js": "^7.7.14"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",
