@@ -1,28 +1,40 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { IChapterdata } from '../../../types/index';
+import { ExttoUIWebMsgTypes } from '../../../types/ExtToUIMsg';
 import VerseView from './VerseView';
-
-const chapterContent: IChapterdata = {
-  chapterNumber: 1,
-  contents: [
-    {
-      verseNumber: 1,
-      verseText: 'Sample test text..... verse 1 of chapter 1....',
-      audio: '',
-    },
-    {
-      verseNumber: 2,
-      verseText: 'Sample test text..... verse 2 of chapter 1....',
-      audio: '',
-    },
-  ],
-};
 function App() {
+  const [chapterContent, setChapterContent] = useState<IChapterdata | null>(
+    null,
+  );
   const [scriptDirection, setScriptDirection] = useState<'ltr' | 'rtl'>('ltr');
+
+  useEffect(() => {
+    const handleExtensionPostMessages = (event: MessageEvent) => {
+      const { type, data } = event.data;
+      switch (type) {
+        case ExttoUIWebMsgTypes.ChapterData: {
+          setChapterContent(data.ChapterData[0]);
+          setScriptDirection(data.scriptDirection);
+          break;
+        }
+
+        default:
+          break;
+      }
+    };
+
+    // add listener for the event
+    window.addEventListener('message', handleExtensionPostMessages);
+
+    return () => {
+      // clean up event listener
+      window.removeEventListener('message', handleExtensionPostMessages);
+    };
+  }, []);
 
   return (
     <main className="my-5 flex flex-col gap-y-5">
-      {!chapterContent && <>Loading...</>}
+      {!chapterContent && <>Loading Resource...</>}
       {chapterContent?.contents.map((verseData) => (
         <VerseView
           key={verseData.verseNumber}

@@ -6,7 +6,6 @@ export async function getAudioBlob(
 ) {
   const audioFiles =
     await vscode.workspace.fs.readDirectory(resourceChapterPath);
-  console.log('audio files ==========> ', audioFiles);
 
   const audios: Record<string, vscode.Uri> = {};
   audioFiles.forEach(async (file) => {
@@ -43,14 +42,9 @@ export async function processTheChapter(
   resourceDir: vscode.Uri,
   metadataJson: any,
 ) {
-  // get the ingredinets path from metadata
-  console.log(
-    'metaaaaaaaaa ingred  ----------- :',
-    { book },
-    metadataJson.ingredients,
-  );
   /**
    * There are two variation of path in ingredients
+   * get the ingredinets path from metadata
    * v1 => ingredients/BookId/Chapter/1_1.mp3
    * v2 => audio/ingredients/BOOKId/Chapter/1_1_1_default.wav
    */
@@ -74,14 +68,11 @@ export async function processTheChapter(
     () => true,
     () => false,
   );
-  console.log('chapterPath =================== > ', chapterPath);
 
   let audioData: Record<string, vscode.Uri> = {};
   if (chapterExist) {
     audioData = await getAudioBlob(chapterPath, chapter);
   }
-
-  console.log('audio++++++++++++++++++++++++++++ ', { audioData });
 
   let bookContent = [];
   if (usfmData) {

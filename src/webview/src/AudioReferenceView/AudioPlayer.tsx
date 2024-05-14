@@ -5,21 +5,29 @@ import Waveform from './Waveform';
 
 interface IAudioPlayer {
   audioURI: string;
+  verseNumber: number;
 }
 
-function AudioPlayer({ audioURI }: IAudioPlayer) {
+function AudioPlayer({ audioURI, verseNumber }: IAudioPlayer) {
   const [control, setControl] = useState<'play' | 'pause' | ''>('');
+
   return (
     <div
-      className="w-[99%] h-7 border border-gray-600 my-1 px-2 py-1 -bottom-10 right-0 self-center
-        bg-[var(--vscode-textSeparator-foreground)] flex gap-5 items-center"
+      className="w-[99%] h-7 border border-gray-600 px-2 py-1 self-center
+        bg-[var(--vscode-textSeparator-foreground)] flex gap-5 items-center relative"
     >
       {/* Wave */}
-      <div className="flex-1">
+      <div className="flex-1 relative">
         {audioURI && (
-          <Waveform url={audioURI} control={control} setControl={setControl} />
+          <Waveform
+            url={audioURI}
+            control={control}
+            setControl={setControl}
+            verseNumber={verseNumber}
+          />
         )}
-
+      </div>
+      <div>
         {/* button controls */}
         {control === 'play' ? (
           <button

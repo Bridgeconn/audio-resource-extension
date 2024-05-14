@@ -62,7 +62,6 @@ export class ScribeAudioReference {
 
     // set UI here
     if (this.panel) {
-      console.log('panel ---------------*****--------', this.panel);
 
       this.panel.webview.html = this.getHtmlForEditoPanel(this.panel.webview);
 
