@@ -2,8 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { AudioResource } from './provider/AudioResource/provider';
-import { getWebviewContentResource } from './provider/AudioResource/AudioWebView';
-import * as path from 'path';
+import { initAudioReference } from './provider/AudioResource/AudioReference';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -49,30 +48,16 @@ export async function activate(context: vscode.ExtensionContext) {
    * Test implementation of webvie for current loading ==================
    * this is used until the issue fixed with resource manger
    */
+
+  /**
+   * Register Audio Editor
+   */
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'scribe-audio-resource.openAudioReferencePane',
       async () => {
-        const panel = vscode.window.createWebviewPanel(
-          'audioreerence',
-          'Audio Reference',
-          vscode.ViewColumn.One,
-          {
-            enableScripts: true,
-            localResourceRoots: [
-              vscode.Uri.file(path.join(context.extensionPath, 'src')),
-              vscode.Uri.file(
-                path.join(
-                  vscode.workspace.workspaceFolders?.[0].uri.fsPath as string,
-                ),
-              ),
-            ],
-          },
-        );
-        panel.webview.html = await getWebviewContentResource(
-          panel.webview,
-          context,
-        );
+        // TODO : Need to checl multi instances create issue or not
+        await initAudioReference(context);
       },
     ),
   );
