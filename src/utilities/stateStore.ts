@@ -1,33 +1,27 @@
-import * as vscode from "vscode";
-import {
-  VerseRefGlobalState,
-  SelectedTextDataWithContext,
-  OBSRef,
-} from "../types";
+import * as vscode from 'vscode';
+import { VerseRefGlobalState } from '../types';
 type StateStoreUpdate =
-  | { key: "verseRef"; value: VerseRefGlobalState }
-  | { key: "uri"; value: string | null }
-  | { key: "currentLineSelection"; value: SelectedTextDataWithContext }
-  | { key: "obsRef"; value: OBSRef };
+  | { key: 'verseRef'; value: VerseRefGlobalState }
+  | { key: 'uri'; value: string | null };
 
-type StateStoreKey = StateStoreUpdate["key"];
+type StateStoreKey = StateStoreUpdate['key'];
 type StateStoreValue<K extends StateStoreKey> = Extract<
   StateStoreUpdate,
   { key: K }
->["value"];
+>['value'];
 
-const extensionId = "project-accelerate.shared-state-store";
+const extensionId = 'project-accelerate.shared-state-store';
 
 type DisposeFunction = () => void;
 export async function initializeStateStore() {
   let storeListener: <K extends StateStoreKey>(
     keyForListener: K,
-    callBack: (value: StateStoreValue<K> | undefined) => void
+    callBack: (value: StateStoreValue<K> | undefined) => void,
   ) => DisposeFunction = () => () => undefined;
 
   let updateStoreState: (update: StateStoreUpdate) => void = () => undefined;
   let getStoreState: <K extends StateStoreKey>(
-    key: K
+    key: K,
   ) => Promise<StateStoreValue<K> | undefined> = () =>
     Promise.resolve(undefined);
 

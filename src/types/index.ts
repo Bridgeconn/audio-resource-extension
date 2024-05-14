@@ -40,3 +40,8 @@ export interface VerseRefGlobalState {
   verseRef: string;
   uri: string;
 }
+
+export interface BCGlobalState {
+  bookId: string;
+  chapter: number;
+}
