@@ -6,9 +6,10 @@ interface IWaveformProps {
   url: string;
   control: string;
   setControl: React.Dispatch<React.SetStateAction<'play' | 'pause' | ''>>;
+  verseNumber: number;
 }
 
-function Waveform({ url, control, setControl }: IWaveformProps) {
+function Waveform({ url, control, setControl, verseNumber }: IWaveformProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const wavesurfer = useRef<WaveSurfer | null>(null);
   const [audioPlayBack, setAudioPlayBack] = useState(0);
@@ -25,7 +26,7 @@ function Waveform({ url, control, setControl }: IWaveformProps) {
           const url = URL.createObjectURL(blob);
 
           wavesurfer.current = WaveSurfer.create({
-            container: '#wav-ref-container',
+            container: `#wav-ref-container-${verseNumber}`,
             waveColor: 'rgb(200, 0, 200)',
             progressColor: '#0073E5',
             cursorColor: 'OrangeRed',
@@ -110,9 +111,9 @@ function Waveform({ url, control, setControl }: IWaveformProps) {
   return (
     <div className="flex items-center justify-between w-full gap-3">
       <div
-        className="flex-1 relative h-6"
+        className="flex-1 h-6 relative"
         ref={containerRef}
-        id="wav-ref-container"
+        id={`wav-ref-container-${verseNumber}`}
       />
       {/* Duration */}
       <div className="">{formatAudioDuration(audioPlayBack) as string}</div>

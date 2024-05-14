@@ -30,8 +30,8 @@ function VerseView({ verseData, scriptDirection }: IVerseView) {
             className={`flex flex-col gap-2 ${scriptDirection === 'rtl' && 'flex-row-reverse text-end'}`}
           >
             <div className="flex-1">{verseData.verseText}</div>
-            <div className="flex-1">
-              <AudioPlayer audioURI={verseData?.audio} />
+            <div className="flex-1 relative">
+              <AudioPlayer audioURI={verseData?.audio} verseNumber={verseData.verseNumber}/>
             </div>
           </div>
         </div>
