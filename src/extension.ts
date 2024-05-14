@@ -3,6 +3,7 @@
 import * as vscode from 'vscode';
 import { AudioResource } from './provider/AudioResource/provider';
 import { initAudioReference } from './provider/AudioResource/AudioReference';
+import { StateStore, initializeStateStore } from './utilities/stateStore';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -26,7 +27,6 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(disposable);
-  console.log('Test1');
 
   const extension = vscode.extensions.getExtension(
     'sevenx-codex.codex-resources',
@@ -58,6 +58,53 @@ export async function activate(context: vscode.ExtensionContext) {
       async () => {
         // TODO : Need to checl multi instances create issue or not
         await initAudioReference(context);
+      },
+    ),
+  );
+
+  /**
+   * Command to change the Reference
+   * this is for dev mode
+   */
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'scribe-audio-resource.changeBCReference',
+      async () => {
+        // get the user data for reference
+        // format of reference is BOOKID ch:verse
+        const bcRef = await vscode.window.showInputBox({
+          prompt: 'Enter Reference',
+          placeHolder: 'Add like the same as exmaple here - MAT 1:1',
+        });
+        if (!bcRef) {
+          return;
+        }
+
+        // if (!/\w{3}\s[1-9]:[1-9][0-9]{1,2}/.test(bcRef)) {
+        if (!/([A-Za-z0-9]{3}) (\d+):(\d+)/.test(bcRef)) {
+          // wrong format
+          vscode.window.showErrorMessage(
+            'Entered Reference is not in the correct format. BOOKID CHAPTER:VERSE ( MAT 1:1 )',
+          );
+          return;
+        }
+
+        console.log('bcsref========> ', bcRef);
+
+        // update to store state global
+        initializeStateStore()
+          .then(({ updateStoreState }) => {
+            updateStoreState({
+              key: 'verseRef',
+              value: { verseRef: bcRef, uri: '' },
+            });
+          })
+          .then(() => {
+            vscode.commands.executeCommand(
+              'scribe-audio-resource.openAudioReferencePane',
+            );
+            console.log('updated reerence >>>>>>>>>>>>');
+          });
       },
     ),
   );

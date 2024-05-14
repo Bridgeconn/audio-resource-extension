@@ -8,34 +8,52 @@ import * as path from 'path';
 import { getProjectMeta } from '../../utilities/getMeta';
 import { getVersification } from '../../utilities/getVersificationData';
 import { ExttoUIWebMsgTypes } from '../../types/ExtToUIMsg';
+import { StateStore, initializeStateStore } from '../../utilities/stateStore';
+import { extractBookChapterVerse } from '../../utilities/extractVerseRef';
 
 export class ScribeAudioReference {
   private panel: vscode.WebviewPanel | undefined;
   private static readonly viewType = 'audioReference';
   private readonly globalState: vscode.Memento;
-  private readonly currentBC: { bookId: string; chapter: number };
+  private currentBC: { bookId: string; chapter: number };
   private loadedUSFMBookContent: Record<string, any>;
   private currentChapterVerses: IChapterdata[] | undefined;
   private resourcePath: vscode.Uri;
   private resourcePathSting: string;
   private metadataJson: any;
+  private resourceName: string;
+
+  private globalStoreState:
+    | Awaited<ReturnType<typeof initializeStateStore>>
+    | undefined;
 
   /**
    * Constructor
    */
   constructor(private readonly context: vscode.ExtensionContext) {
+    // global state extension
+    initializeStateStore().then((store) => {
+      this.globalStoreState = store;
+    });
+
     // starting here
     this.globalState = context.workspaceState;
     // TODO : added a fallback for currentBC , for testing too
-    this.currentBC = this.getGlobalState(storageKeys.currentBC) || {
+    // this.currentBC = this.getGlobalState(storageKeys.currentBC) || {
+    //   bookId: 'MAT',
+    //   chapter: 1,
+    // };
+    this.currentBC = {
       bookId: 'MAT',
-      chapter: 1,
+      chapter: 5,
     };
+
     // TODO : Hard coded now , need to change
     this.resourcePath = vscode.Uri.parse(
       '/home/siju/Music/Export Test Vscode/RTL/RTL test',
     );
     this.resourcePathSting = '/home/siju/Music/Export Test Vscode/RTL/RTL test';
+    this.resourceName = 'RTL test';
     this.loadedUSFMBookContent = {};
 
     // read metadata
@@ -44,7 +62,8 @@ export class ScribeAudioReference {
     // Create and configure the webview panel
     this.panel = vscode.window.createWebviewPanel(
       ScribeAudioReference.viewType,
-      `${this.currentBC.bookId} - ${this.currentBC.chapter}`, // panel tab title
+      // `${this.currentBC.bookId} - ${this.currentBC.chapter}`, // panel tab title
+      this.resourceName,
       vscode.ViewColumn.Beside,
       {
         enableScripts: true,
@@ -62,11 +81,38 @@ export class ScribeAudioReference {
 
     // set UI here
     if (this.panel) {
-
       this.panel.webview.html = this.getHtmlForEditoPanel(this.panel.webview);
+      console.log('in panel ))))) ', this.globalStoreState);
+
+      // load ref from global state and load ui content
+      initializeStateStore().then((store) => {
+        this.globalStoreState = store;
+        store.getStoreState('verseRef').then(async (value) => {
+          console.log('inside global state get store &&&&&&&&');
+
+          if (value) {
+            const { bookID, chapter } = await extractBookChapterVerse(
+              value.verseRef,
+            );
+            this.currentBC = { bookId: bookID, chapter: chapter };
+            console.log(
+              'load read data after get ref =========> ',
+              { bookID, chapter },
+              ' ::::  ',
+              this.currentBC,
+            );
+
+            if (this.panel?.title) {
+              this.panel.title = `${this.resourceName} ${bookID}-${chapter}`;
+            }
+
+            this.readData(bookID, chapter);
+          }
+        });
+      });
 
       // after panel init
-      this.readData(this.currentBC.bookId, this.currentBC.chapter);
+      // this.readData(this.currentBC.bookId, this.currentBC.chapter);
 
       /**
        * Handle recieve message from webview
@@ -83,9 +129,29 @@ export class ScribeAudioReference {
       });
     }
 
+    // INFO : Check listner need or not later. the Reference Provider will dispose and init each call
+    // listner for BCV change - global state extension
+    const verseRefListenerDisposeFunction =
+      this.globalStoreState?.storeListener('verseRef', async (BCVState) => {
+        console.log(
+          'Book Chapter Changed ------********--------*******---- ',
+          BCVState,
+        );
+        if (BCVState?.verseRef) {
+          const { bookID, chapter, verse } = await extractBookChapterVerse(
+            BCVState.verseRef,
+          );
+
+          this.currentBC = { bookId: bookID, chapter: chapter };
+          // call read data to change the reference
+          this.readData(bookID.toUpperCase(), chapter);
+        }
+      });
+
     // Dispose of the panel when it is closed
     this.panel.onDidDispose(() => {
       this.panel = undefined;
+      verseRefListenerDisposeFunction?.();
     });
   }
 
@@ -104,6 +170,8 @@ export class ScribeAudioReference {
    * Read the chapter content (USFM and Audio)
    */
   private async readData(book: string, chapter: number) {
+    console.log('in readData -----=============', book, chapter);
+
     let versificationData;
     // read only once while changing book
     const usfmData =
@@ -173,6 +241,26 @@ export class ScribeAudioReference {
       }, 500);
     }
     return chapterData;
+  }
+
+  /**
+   * get reference from global state extension
+   */
+  private async _getReferenceFromGlobal() {
+    if (!this.globalState) {
+      await initializeStateStore().then((store) => {
+        this.globalStoreState = store;
+      });
+    }
+    const verseRef = await this.globalStoreState?.getStoreState('verseRef');
+    console.log('_getReferenceFromGlobal  <<<<< : ', verseRef);
+
+    if (verseRef?.verseRef) {
+      const { bookID, chapter } = await extractBookChapterVerse(
+        verseRef?.verseRef,
+      );
+      this.currentBC = { bookId: bookID, chapter: chapter };
+    }
   }
 
   // Method to update the global state
