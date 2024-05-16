@@ -47,27 +47,45 @@ export async function processTheChapter(
    * get the ingredinets path from metadata
    * v1 => ingredients/BookId/Chapter/1_1.mp3
    * v2 => audio/ingredients/BOOKId/Chapter/1_1_1_default.wav
+   * Both have common file names versification.json in the same directory - so we can use this to identify the base directory of audio from metadata
    */
 
-  const currentBookPath = Object.keys(metadataJson.ingredients).find((key) =>
-    key.includes(book),
+  const versificationPath = Object.keys(metadataJson.ingredients).find((key) =>
+    key.includes('versification.json'),
   );
 
-  if (!currentBookPath) {
-    vscode.window.showWarningMessage(
-      `Audio for ${book} not avaiable in the reference.`,
+  if (!versificationPath) {
+    vscode.window.showErrorMessage(
+      `Unable to find the audio directory in the resource.`,
     );
     return [];
   }
 
-  const audioFilesPath = currentBookPath?.split(book)[0];
-  let audioExtension: any = currentBookPath?.split('.');
-  audioExtension = audioExtension?.[audioExtension.length - 1];
+  const audioIngredientsPath =
+    versificationPath?.split('versification.json')[0];
+
+  // generate path to the requested chapter
+  const audioBasePath = vscode.Uri.joinPath(
+    resourceDir,
+    audioIngredientsPath as string,
+  );
+
+  // check the book path is exist or not
+  const audioBasePathExist = await vscode.workspace.fs.stat(audioBasePath).then(
+    () => true,
+    () => false,
+  );
+
+  if (!audioBasePathExist) {
+    vscode.window.showErrorMessage(
+      `Unable to find the audio directory in the resource.`,
+    );
+    return [];
+  }
 
   // generate path to the requested chapter
   const chapterPath = vscode.Uri.joinPath(
-    resourceDir,
-    audioFilesPath as string,
+    audioBasePath,
     book,
     chapter.toString(),
   );
@@ -77,6 +95,13 @@ export async function processTheChapter(
     () => true,
     () => false,
   );
+
+  if (!chapterExist) {
+    vscode.window.showWarningMessage(
+      `Audio for ${book} not avaiable in the reference.`,
+    );
+    return [];
+  }
 
   let audioData: Record<string, vscode.Uri> = {};
   if (chapterExist) {
