@@ -1,71 +1,34 @@
-# scribe-audio-resource README
-
-This is the README for your extension "scribe-audio-resource". After writing up a brief description, we recommend including the following sections.
-
-## Features
-
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
-
-For example if there is an image subfolder under your extension project workspace:
-
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
-
-## Requirements
-
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
-
-## Extension Settings
-
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
+<h1 align="center">Scribe Audio Resource Extension 🎙</h1>
 
 ---
 
-## Following extension guidelines
+`Scribe Audio Resource` is to provide provision to load [Scripture Burrito](https://docs.burrito.bible/en/latest/) standard based audio project as reference. This extension helps you to load and play audios seamlesssly by interacting with editor and reference at one place. The extension is available in [Visual Studio Code](https://code.visualstudio.com/) and in [OpenVSX market place](https://open-vsx.org/).
 
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
+## Features
 
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
+### System Prerequisites
 
-## Working with Markdown
+---
 
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
+- Node.js >= 18.17.0
+- Visual Studio Code >= 1.85.0
 
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
 
-## For more information
+### How to Contribute (We follow Fork and merge flow)
 
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
+---
+
+1. Fork this repository
+2. Install dependencies with `yarn install`
+3. Install dependencies with `yarn install` for webview (inside `cd src/webview/`)
+4. For building webview UI `yarn run build:all` or developing webview UI `yarn run watch`
+5. `F5` or `debug` for running vscode host development window
+
+## Contributors
+
+[//]: contributor-faces
+
+<a href="https://github.com/vipinpaul"><img src="https://avatars.githubusercontent.com/u/37212471?s=48&v=4" title="Vipin Paul" width="50" height="50"></a>
+<a href="https://github.com/sijumoncy"><img src="https://avatars.githubusercontent.com/u/72241997?s=64&v=4" title="Siju Moncy" width="50" height="50"></a>
 
 **Enjoy!**
