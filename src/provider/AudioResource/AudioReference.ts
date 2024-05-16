@@ -14,9 +14,8 @@ import {
   CodexResource,
   ConfigResourceValues,
 } from '@codex-extensions/resource-manager-types';
-import { Audio, AudioBurrito } from './types';
 
-export class ScribeAudioReference implements CodexResource<Audio> {
+export class ScribeAudioReference {
   private panel: vscode.WebviewPanel | undefined;
   private static readonly viewType = 'audioReference';
   private readonly globalState: vscode.Memento;
@@ -38,8 +37,10 @@ export class ScribeAudioReference implements CodexResource<Audio> {
   /**
    * Constructor
    */
-  constructor(private readonly context: vscode.ExtensionContext) {
-
+  constructor(
+    private readonly context: vscode.ExtensionContext,
+    private readonly _resource: ConfigResourceValues | undefined,
+  ) {
     // global state extension
     initializeStateStore().then((store) => {
       this.globalStoreState = store;
@@ -58,12 +59,19 @@ export class ScribeAudioReference implements CodexResource<Audio> {
     };
 
     // TODO : Hard coded now , need to change
-    this.resourcePath = vscode.Uri.parse(
-      '/home/siju/Music/Export Test Vscode/RTL/RTL test',
-    );
-    this.resourcePathSting = '/home/siju/Music/Export Test Vscode/RTL/RTL test';
-    this.resourceName = 'RTL test';
+    this.resourcePath = vscode.Uri.parse('');
+    this.resourcePathSting = '';
+    this.resourceName = 'Reference Audio';
     this.loadedUSFMBookContent = {};
+    console.log('Resource data in actual Refernce class ^^^^^^^^^^^^^^^^^ ', {
+      _resource,
+    });
+
+    if (_resource) {
+      this.resourcePath = vscode.Uri.parse(_resource.localPath);
+      this.resourcePathSting = _resource.localPath;
+      this.resourceName = _resource.name;
+    }
 
     // read metadata
     this._readMeta();
@@ -90,27 +98,19 @@ export class ScribeAudioReference implements CodexResource<Audio> {
 
     // set UI here
     if (this.panel) {
-      this.panel.webview.html = this.getHtmlForEditoPanel(this.panel.webview);
-      console.log('in panel ))))) ', this.globalStoreState);
+      this.panel.webview.html = this.getHtmlForReferencePanel(
+        this.panel.webview,
+      );
 
       // load ref from global state and load ui content
       initializeStateStore().then((store) => {
         this.globalStoreState = store;
         store.getStoreState('verseRef').then(async (value) => {
-          console.log('inside global state get store &&&&&&&&');
-
           if (value) {
             const { bookID, chapter } = await extractBookChapterVerse(
               value.verseRef,
             );
             this.currentBC = { bookId: bookID, chapter: chapter };
-            console.log(
-              'load read data after get ref =========> ',
-              { bookID, chapter },
-              ' ::::  ',
-              this.currentBC,
-            );
-
             if (this.panel?.title) {
               this.panel.title = `${this.resourceName} ${bookID}-${chapter}`;
             }
@@ -119,9 +119,6 @@ export class ScribeAudioReference implements CodexResource<Audio> {
           }
         });
       });
-
-      // after panel init
-      // this.readData(this.currentBC.bookId, this.currentBC.chapter);
 
       /**
        * Handle recieve message from webview
@@ -138,29 +135,31 @@ export class ScribeAudioReference implements CodexResource<Audio> {
       });
     }
 
-    // INFO : Check listner need or not later. the Reference Provider will dispose and init each call
     // listner for BCV change - global state extension
-    const verseRefListenerDisposeFunction =
-      this.globalStoreState?.storeListener('verseRef', async (BCVState) => {
-        console.log(
-          'Book Chapter Changed ------********--------*******---- ',
-          BCVState,
-        );
-        if (BCVState?.verseRef) {
-          const { bookID, chapter, verse } = await extractBookChapterVerse(
-            BCVState.verseRef,
+    const verseRefListenerDisposeFunction = initializeStateStore().then(
+      async ({ storeListener }) => {
+        storeListener('verseRef', async (BCVState) => {
+          console.log(
+            'ref changed - listner : ',
+            BCVState,
           );
+          if (BCVState?.verseRef) {
+            const { bookID, chapter, verse } = await extractBookChapterVerse(
+              BCVState.verseRef,
+            );
 
-          this.currentBC = { bookId: bookID, chapter: chapter };
-          // call read data to change the reference
-          this.readData(bookID.toUpperCase(), chapter);
-        }
-      });
+            this.currentBC = { bookId: bookID, chapter: chapter };
+            // call read data to change the reference
+            this.readData(bookID.toUpperCase(), chapter);
+          }
+        });
+      },
+    );
 
     // Dispose of the panel when it is closed
     this.panel.onDidDispose(() => {
       this.panel = undefined;
-      verseRefListenerDisposeFunction?.();
+      // TODO: need to dispose the listner verseRefListenerDisposeFunction();
     });
   }
 
@@ -179,6 +178,9 @@ export class ScribeAudioReference implements CodexResource<Audio> {
    * Read the chapter content (USFM and Audio)
    */
   private async readData(book: string, chapter: number) {
+    if (this.panel) {
+      this.panel.title = `${this.resourceName} ${book}-${chapter}`;
+    }
 
     let versificationData;
     // read only once while changing book
@@ -253,26 +255,6 @@ export class ScribeAudioReference implements CodexResource<Audio> {
     return chapterData;
   }
 
-  /**
-   * get reference from global state extension
-   */
-  private async _getReferenceFromGlobal() {
-    if (!this.globalState) {
-      await initializeStateStore().then((store) => {
-        this.globalStoreState = store;
-      });
-    }
-    const verseRef = await this.globalStoreState?.getStoreState('verseRef');
-    console.log('_getReferenceFromGlobal  <<<<< : ', verseRef);
-
-    if (verseRef?.verseRef) {
-      const { bookID, chapter } = await extractBookChapterVerse(
-        verseRef?.verseRef,
-      );
-      this.currentBC = { bookId: bookID, chapter: chapter };
-    }
-  }
-
   // Method to update the global state
   public updateGlobalState(key: string, value: any) {
     this.globalState.update(key, value);
@@ -305,7 +287,7 @@ export class ScribeAudioReference implements CodexResource<Audio> {
   /**
    * Function to get the html of the Webview
    */
-  private getHtmlForEditoPanel(webview: vscode.Webview): string {
+  private getHtmlForReferencePanel(webview: vscode.Webview): string {
     // Local path to script and css for the webview
     const scriptUri = webview.asWebviewUri(
       vscode.Uri.joinPath(
@@ -350,110 +332,17 @@ export class ScribeAudioReference implements CodexResource<Audio> {
         </html>
     `;
   }
-
-  // ----------- Resoure Manager Funtions ----------
-  downloadResource: CodexResource<Audio>['downloadResource'] = async (
-    fullResource,
-    utils,
-  ) => {
-    // this is to avoid tsError of function not return ConfigResourceValues
-    const configresourceValues = {
-      name: '',
-      id: '',
-      localPath: '',
-      remoteUrl: '',
-      version: '',
-      type: '',
-    };
-    return Promise.resolve(configresourceValues);
-  };
-
-  getResources = async () => {
-    return Promise.resolve();
-  };
-
-  getResourceById = async () => {
-    return Promise.resolve();
-  };
-
-  getResourceDisplayData = async () => {
-    return Promise.resolve();
-  };
-
-  openResource: CodexResource<Audio>['openResource'] = async (
-    resource,
-    helpers,
-  ) => {
-    vscode.commands.executeCommand(
-      'scribe-audio-resource.openAudioReferencePane',
-    );
-  };
-
-  getTableDisplayData = async () => {
-    return [];
-  };
-
-  getOfflineImportMetadata: CodexResource<Audio>['getOfflineImportMetadata'] =
-    async (params) => {
-      const { fs, resourceUri } = params;
-
-      const metadataUri = vscode.Uri.joinPath(resourceUri, 'metadata.json');
-
-      const metadataFile = await fs.readFile(metadataUri);
-      const metadataJson = JSON.parse(metadataFile.toString());
-      const metadata = metadataJson as AudioBurrito;
-      const primaryKey = Object.keys(metadata.identification.primary);
-      const primaryId = Object.keys(
-        metadata.identification.primary[primaryKey[0]],
-      );
-      const revision =
-        metadata.identification.primary[primaryKey[0]][primaryId[0]].revision;
-      return {
-        ...metadata,
-        name: metadata?.identification?.name.en,
-        id: String(primaryId[0]),
-        version: revision,
-      };
-    };
-  getOfflineConfigResourceValues: CodexResource<Audio>['getOfflineConfigResourceValues'] =
-    async (params) => {
-      const { fs, resourceUri } = params;
-
-      const metadataUri = vscode.Uri.joinPath(resourceUri, 'metadata.json');
-
-      const metadataFile = await fs.readFile(metadataUri);
-      const metadataJson = JSON.parse(metadataFile.toString());
-      const metadata = metadataJson as AudioBurrito;
-
-      const localPath: string = resourceUri.fsPath;
-      const primaryKey = Object.keys(metadata.identification.primary);
-      const primaryId = Object.keys(
-        metadata.identification.primary[primaryKey[0]],
-      );
-      const revision =
-        metadata.identification.primary[primaryKey[0]][primaryId[0]].revision;
-      const downloadedResource: ConfigResourceValues = {
-        name: metadata?.identification?.name.en,
-        id: String(primaryId[0]),
-        localPath: localPath,
-        type: this.id,
-        remoteUrl: '',
-        version: revision,
-        // TODO : Ts ignored here => this language will be added in the npm types package later
-        // @ts-ignore
-        language: metadata.languages[0].tag,
-      };
-
-      return downloadedResource;
-    };
 }
 
 export let scribeAudioReferenceInstance: ScribeAudioReference | undefined;
 
-export async function initAudioReference(context: vscode.ExtensionContext) {
+export async function initAudioReference(
+  context: vscode.ExtensionContext,
+  resource?: ConfigResourceValues,
+) {
   if (scribeAudioReferenceInstance) {
     scribeAudioReferenceInstance.dispose();
   }
-  scribeAudioReferenceInstance = new ScribeAudioReference(context);
+  scribeAudioReferenceInstance = new ScribeAudioReference(context, resource);
   return scribeAudioReferenceInstance;
 }
