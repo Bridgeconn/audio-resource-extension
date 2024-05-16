@@ -15,7 +15,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '18.17.0'
+          node-version: '18.18.0'
 
       - name: Install extension dependencies
         run: yarn install
