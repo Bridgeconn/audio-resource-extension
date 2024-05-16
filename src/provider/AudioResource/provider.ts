@@ -46,45 +46,9 @@ export class AudioResource implements CodexResource<Audio> {
     resource,
     helpers,
   ) => {
-    helpers.renderInWebview({
-      handler: (webviewPanel) => {
-        webviewPanel.webview.onDidReceiveMessage((e) =>
-          handleResourceWebviewMessages(e, webviewPanel.webview.postMessage),
-        );
-      },
-      getWebviewContent: (webview, extensionUri) => {
-        
-      },
-      onWebviewVisible: async (webviewPanel) => {
-        helpers.stateStore.storeListener('verseRef', async (verseRefStore) => {
-          console.log('verseRef change event triggered from storeListener ===');
-          /**
-           * Here need to handle post data to UI when verse / chapter change
-           */
-          // webviewPanel.webview.postMessage({
-          //   type: 'update-twl',
-          //   payload: {
-          //     wordsList: wordsList,
-          //   },
-          // });
-        });
-        const verseRefStore = (await helpers.stateStore?.getStoreState(
-          'verseRef',
-        )) as { verseRef: any };
-        console.log(
-          'current verse selction ========> ',
-          verseRefStore?.verseRef,
-        );
-
-        // webviewPanel.webview.postMessage({
-
-        //   type: 'update-twl',
-        //   payload: {
-        //     wordsList: wordsList,
-        //   },
-        // });
-      },
-    });
+    // vscode.commands.executeCommand(
+    //   'scribe-audio-resource.openAudioReferencePane',
+    // );
   };
 
   // openResource: CodexResource<Audio>['openResource'] = async (

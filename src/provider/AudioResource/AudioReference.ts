@@ -10,8 +10,13 @@ import { getVersification } from '../../utilities/getVersificationData';
 import { ExttoUIWebMsgTypes } from '../../types/ExtToUIMsg';
 import { StateStore, initializeStateStore } from '../../utilities/stateStore';
 import { extractBookChapterVerse } from '../../utilities/extractVerseRef';
+import {
+  CodexResource,
+  ConfigResourceValues,
+} from '@codex-extensions/resource-manager-types';
+import { Audio, AudioBurrito } from './types';
 
-export class ScribeAudioReference {
+export class ScribeAudioReference implements CodexResource<Audio> {
   private panel: vscode.WebviewPanel | undefined;
   private static readonly viewType = 'audioReference';
   private readonly globalState: vscode.Memento;
@@ -23,6 +28,9 @@ export class ScribeAudioReference {
   private metadataJson: any;
   private resourceName: string;
 
+  id = 'codex.audio';
+  displayLabel = 'Audio Resource';
+
   private globalStoreState:
     | Awaited<ReturnType<typeof initializeStateStore>>
     | undefined;
@@ -31,6 +39,7 @@ export class ScribeAudioReference {
    * Constructor
    */
   constructor(private readonly context: vscode.ExtensionContext) {
+
     // global state extension
     initializeStateStore().then((store) => {
       this.globalStoreState = store;
@@ -170,7 +179,6 @@ export class ScribeAudioReference {
    * Read the chapter content (USFM and Audio)
    */
   private async readData(book: string, chapter: number) {
-    console.log('in readData -----=============', book, chapter);
 
     let versificationData;
     // read only once while changing book
@@ -208,20 +216,22 @@ export class ScribeAudioReference {
     );
     this.currentChapterVerses = chapterData;
 
-    // conversion of path to webViewPath
-    for (
-      let index = 0;
-      index < this.currentChapterVerses[0].contents.length;
-      index++
-    ) {
-      const currentAudioUri = this.currentChapterVerses[0].contents[index]
-        .audio as unknown as vscode.Uri;
+    // conversion of path to webViewPath. Only if have content not []
+    if (this.currentChapterVerses.length > 0) {
+      for (
+        let index = 0;
+        index < this.currentChapterVerses[0].contents.length;
+        index++
+      ) {
+        const currentAudioUri = this.currentChapterVerses[0].contents[index]
+          .audio as unknown as vscode.Uri;
 
-      if (currentAudioUri) {
-        const converted = await this.convertToAsWebViewUri(currentAudioUri);
+        if (currentAudioUri) {
+          const converted = await this.convertToAsWebViewUri(currentAudioUri);
 
-        if (converted) {
-          this.currentChapterVerses[0].contents[index].audio = converted;
+          if (converted) {
+            this.currentChapterVerses[0].contents[index].audio = converted;
+          }
         }
       }
     }
@@ -340,6 +350,102 @@ export class ScribeAudioReference {
         </html>
     `;
   }
+
+  // ----------- Resoure Manager Funtions ----------
+  downloadResource: CodexResource<Audio>['downloadResource'] = async (
+    fullResource,
+    utils,
+  ) => {
+    // this is to avoid tsError of function not return ConfigResourceValues
+    const configresourceValues = {
+      name: '',
+      id: '',
+      localPath: '',
+      remoteUrl: '',
+      version: '',
+      type: '',
+    };
+    return Promise.resolve(configresourceValues);
+  };
+
+  getResources = async () => {
+    return Promise.resolve();
+  };
+
+  getResourceById = async () => {
+    return Promise.resolve();
+  };
+
+  getResourceDisplayData = async () => {
+    return Promise.resolve();
+  };
+
+  openResource: CodexResource<Audio>['openResource'] = async (
+    resource,
+    helpers,
+  ) => {
+    vscode.commands.executeCommand(
+      'scribe-audio-resource.openAudioReferencePane',
+    );
+  };
+
+  getTableDisplayData = async () => {
+    return [];
+  };
+
+  getOfflineImportMetadata: CodexResource<Audio>['getOfflineImportMetadata'] =
+    async (params) => {
+      const { fs, resourceUri } = params;
+
+      const metadataUri = vscode.Uri.joinPath(resourceUri, 'metadata.json');
+
+      const metadataFile = await fs.readFile(metadataUri);
+      const metadataJson = JSON.parse(metadataFile.toString());
+      const metadata = metadataJson as AudioBurrito;
+      const primaryKey = Object.keys(metadata.identification.primary);
+      const primaryId = Object.keys(
+        metadata.identification.primary[primaryKey[0]],
+      );
+      const revision =
+        metadata.identification.primary[primaryKey[0]][primaryId[0]].revision;
+      return {
+        ...metadata,
+        name: metadata?.identification?.name.en,
+        id: String(primaryId[0]),
+        version: revision,
+      };
+    };
+  getOfflineConfigResourceValues: CodexResource<Audio>['getOfflineConfigResourceValues'] =
+    async (params) => {
+      const { fs, resourceUri } = params;
+
+      const metadataUri = vscode.Uri.joinPath(resourceUri, 'metadata.json');
+
+      const metadataFile = await fs.readFile(metadataUri);
+      const metadataJson = JSON.parse(metadataFile.toString());
+      const metadata = metadataJson as AudioBurrito;
+
+      const localPath: string = resourceUri.fsPath;
+      const primaryKey = Object.keys(metadata.identification.primary);
+      const primaryId = Object.keys(
+        metadata.identification.primary[primaryKey[0]],
+      );
+      const revision =
+        metadata.identification.primary[primaryKey[0]][primaryId[0]].revision;
+      const downloadedResource: ConfigResourceValues = {
+        name: metadata?.identification?.name.en,
+        id: String(primaryId[0]),
+        localPath: localPath,
+        type: this.id,
+        remoteUrl: '',
+        version: revision,
+        // TODO : Ts ignored here => this language will be added in the npm types package later
+        // @ts-ignore
+        language: metadata.languages[0].tag,
+      };
+
+      return downloadedResource;
+    };
 }
 
 export let scribeAudioReferenceInstance: ScribeAudioReference | undefined;
