@@ -48,24 +48,17 @@ export class ScribeAudioReference {
 
     // starting here
     this.globalState = context.workspaceState;
-    // TODO : added a fallback for currentBC , for testing too
-    // this.currentBC = this.getGlobalState(storageKeys.currentBC) || {
-    //   bookId: 'MAT',
-    //   chapter: 1,
-    // };
+    // static initial reference
     this.currentBC = {
       bookId: 'MAT',
       chapter: 5,
     };
 
-    // TODO : Hard coded now , need to change
+    // initial hardcoded values
     this.resourcePath = vscode.Uri.parse('');
     this.resourcePathSting = '';
     this.resourceName = 'Reference Audio';
     this.loadedUSFMBookContent = {};
-    console.log('Resource data in actual Refernce class ^^^^^^^^^^^^^^^^^ ', {
-      _resource,
-    });
 
     if (_resource) {
       this.resourcePath = vscode.Uri.parse(_resource.localPath);
@@ -102,23 +95,22 @@ export class ScribeAudioReference {
         this.panel.webview,
       );
 
-      // load ref from global state and load ui content
-      initializeStateStore().then((store) => {
-        this.globalStoreState = store;
-        store.getStoreState('verseRef').then(async (value) => {
-          if (value) {
-            const { bookID, chapter } = await extractBookChapterVerse(
-              value.verseRef,
-            );
-            this.currentBC = { bookId: bookID, chapter: chapter };
-            if (this.panel?.title) {
-              this.panel.title = `${this.resourceName} ${bookID}-${chapter}`;
-            }
+      this._getBCSRefandRenderContent();
 
-            this.readData(bookID, chapter);
+      /**
+       * on pane change
+       */
+      this.panel.onDidChangeViewState(
+        async (e) => {
+          const panel = e.webviewPanel;
+          if (this.panel?.visible) {
+            panel.webview.html = this.getHtmlForReferencePanel(panel.webview);
+            this._getBCSRefandRenderContent();
           }
-        });
-      });
+        },
+        null,
+        context.subscriptions,
+      );
 
       /**
        * Handle recieve message from webview
@@ -139,10 +131,7 @@ export class ScribeAudioReference {
     const verseRefListenerDisposeFunction = initializeStateStore().then(
       async ({ storeListener }) => {
         storeListener('verseRef', async (BCVState) => {
-          console.log(
-            'ref changed - listner : ',
-            BCVState,
-          );
+          console.log('ref changed - listner : ', BCVState);
           if (BCVState?.verseRef) {
             const { bookID, chapter, verse } = await extractBookChapterVerse(
               BCVState.verseRef,
@@ -160,6 +149,31 @@ export class ScribeAudioReference {
     this.panel.onDidDispose(() => {
       this.panel = undefined;
       // TODO: need to dispose the listner verseRefListenerDisposeFunction();
+    });
+  }
+
+  /**
+   * Get current Reference from shared state and render content
+   */
+  private async _getBCSRefandRenderContent() {
+    // load ref from global state and load ui content
+    initializeStateStore().then((store) => {
+      if (!this.globalStoreState) {
+        this.globalStoreState = store;
+      }
+      store.getStoreState('verseRef').then(async (value) => {
+        if (value) {
+          const { bookID, chapter } = await extractBookChapterVerse(
+            value.verseRef,
+          );
+          this.currentBC = { bookId: bookID, chapter: chapter };
+          if (this.panel?.title) {
+            this.panel.title = `${this.resourceName} ${bookID}-${chapter}`;
+          }
+
+          this.readData(bookID, chapter);
+        }
+      });
     });
   }
 
