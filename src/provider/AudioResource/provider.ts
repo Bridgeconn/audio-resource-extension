@@ -8,12 +8,16 @@ import moment from 'moment';
 import { getNonce, getUri } from '../../utilities';
 import { MessageType } from '../../types';
 import * as vscode from 'vscode';
+import { initAudioReference } from './AudioReference';
 
 export class AudioResource implements CodexResource<Audio> {
   id = 'codex.audio';
   displayLabel = 'Audio Resource';
+  _context: vscode.ExtensionContext | undefined = undefined;
 
-  constructor(private readonly context: vscode.ExtensionContext) {}
+  constructor(private readonly context: vscode.ExtensionContext) {
+    this._context = context;
+  }
   downloadResource: CodexResource<Audio>['downloadResource'] = async (
     fullResource,
     utils,
@@ -46,6 +50,14 @@ export class AudioResource implements CodexResource<Audio> {
     resource,
     helpers,
   ) => {
+    if (this._context) {
+      await initAudioReference(this._context, resource);
+    } else {
+      vscode.window.showErrorMessage(
+        'unable to open reerence panel. No context available.',
+      );
+    }
+
     // vscode.commands.executeCommand(
     //   'scribe-audio-resource.openAudioReferencePane',
     // );
@@ -188,24 +200,7 @@ export class AudioResource implements CodexResource<Audio> {
     //     resourceType: this.id,
     //   }));
     // }
-    return [
-      {
-        id: '42716',
-        name: 'audio_dummy',
-        owner: {
-          name: 'bcs',
-          url: '',
-          avatarUrl: '',
-        },
-        version: {
-          tag: 'v1',
-          releaseDate: new Date(),
-        },
-        fullResource: {},
-        resourceType: this.id,
-      },
-    ];
-    // return [];
+    return [];
   };
 
   getOfflineImportMetadata: CodexResource<Audio>['getOfflineImportMetadata'] =
@@ -265,58 +260,14 @@ export class AudioResource implements CodexResource<Audio> {
 
 const handleResourceWebviewMessages = async (
   e: {
-    type: MessageType;
+    type: MessageType | '';
     payload: unknown;
   },
   postWebviewMessage: (message: any) => void,
 ) => {
   switch (e.type) {
-    case MessageType.GET_TW_CONTENT: {
-      try {
-        const translationWord: {
-          path: string;
-        } = (e.payload as Record<string, any>)?.translationWord;
-
-        if (!translationWord) {
-          return;
-        }
-
-        const path = translationWord.path;
-
-        if (!path) {
-          return;
-        }
-
-        try {
-          const content = await vscode.workspace.fs.readFile(
-            vscode.Uri.file(path),
-          );
-          postWebviewMessage({
-            type: 'update-tw-content',
-            payload: {
-              content: content.toString(),
-            },
-          });
-        } catch (e: any) {
-          postWebviewMessage({
-            type: 'update-tw-content',
-            payload: {
-              error: e?.message,
-              content: null,
-            },
-          });
-        }
-      } catch (error: any) {
-        vscode.window.showErrorMessage(
-          'Unable to read the given translation word: ' + error?.message,
-        );
-        postWebviewMessage({
-          type: 'update-tw-content',
-          payload: {
-            error: 'Not found',
-          },
-        });
-      }
+    case "": {
+      // test
       break;
     }
     default: {
