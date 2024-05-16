@@ -36,9 +36,9 @@ export async function activate(context: vscode.ExtensionContext) {
     const api = await extension.activate();
     if (api) {
       console.log('Api found', api);
-      const currentInstance = await initAudioReference(context);
-      api.registerResource(currentInstance);
-      // api.registerResource(new AudioResource(context));
+      // const currentInstance = await initAudioReference(context);
+      // api.registerResource(currentInstance);
+      api.registerResource(new AudioResource(context));
     } else {
       console.log('API failed successfully!!!!!');
     }
@@ -59,7 +59,7 @@ export async function activate(context: vscode.ExtensionContext) {
       'scribe-audio-resource.openAudioReferencePane',
       async () => {
         // TODO : Need to checl multi instances create issue or not
-        await initAudioReference(context);
+        // await initAudioReference(context);
       },
     ),
   );
