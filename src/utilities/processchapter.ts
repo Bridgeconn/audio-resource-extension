@@ -52,6 +52,14 @@ export async function processTheChapter(
   const currentBookPath = Object.keys(metadataJson.ingredients).find((key) =>
     key.includes(book),
   );
+
+  if (!currentBookPath) {
+    vscode.window.showWarningMessage(
+      `Audio for ${book} not avaiable in the reference.`,
+    );
+    return [];
+  }
+
   const audioFilesPath = currentBookPath?.split(book)[0];
   let audioExtension: any = currentBookPath?.split('.');
   audioExtension = audioExtension?.[audioExtension.length - 1];
@@ -63,6 +71,7 @@ export async function processTheChapter(
     book,
     chapter.toString(),
   );
+
   // check the chapter is exist or not
   const chapterExist = await vscode.workspace.fs.stat(chapterPath).then(
     () => true,

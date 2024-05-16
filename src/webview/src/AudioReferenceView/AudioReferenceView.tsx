@@ -13,7 +13,9 @@ function App() {
       const { type, data } = event.data;
       switch (type) {
         case ExttoUIWebMsgTypes.ChapterData: {
-          setChapterContent(data.ChapterData[0]);
+          setChapterContent(
+            data.ChapterData.length > 0 ? data.ChapterData[0] : [],
+          );
           setScriptDirection(data.scriptDirection);
           break;
         }
@@ -35,13 +37,19 @@ function App() {
   return (
     <main className="my-5 flex flex-col gap-y-5">
       {!chapterContent && <>Loading Resource...</>}
-      {chapterContent?.contents.map((verseData) => (
-        <VerseView
-          key={verseData.verseNumber}
-          verseData={verseData}
-          scriptDirection={scriptDirection}
-        />
-      ))}
+      {chapterContent && !chapterContent?.contents ? (
+        <div className="text-red-500 ">
+          No Audio Available for the current book and chapter
+        </div>
+      ) : (
+        chapterContent?.contents.map((verseData) => (
+          <VerseView
+            key={verseData.verseNumber}
+            verseData={verseData}
+            scriptDirection={scriptDirection}
+          />
+        ))
+      )}
     </main>
   );
 }
